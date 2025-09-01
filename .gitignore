@@ -3,3 +3,7 @@ __pycache__/
 .pre-commit-config.yaml
 pyproject.toml
 .flake8
+# ignorer tout ce qu’il y a dans data/
+data/*
+# mais ne pas ignorer le dossier lui-même
+!data/.gitkeep
