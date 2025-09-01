@@ -5,30 +5,40 @@
   <title>Démo autocomplete</title>
   <style>
     body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; }
-    .wrap { position: relative; margin-bottom: 1rem; }
-    .wrap input { width: 100%; padding: .5rem; font-size: 1rem; }
-    .sug { border: 1px solid #ccc; display: none; margin-top: .25rem; }
-    .sug div { padding: .4rem .5rem; cursor: pointer; }
-    .sug div:hover { background: #f2f2f2; }
+    .wrap { display:flex; flex-direction:column; gap:.4rem; margin-bottom: 1rem; }
+    .row  { display:flex; gap:.5rem; }
+    .row input { flex:1; padding:.5rem; font-size:1rem; }
+    button { padding:.5rem .8rem; }
+    .sug  { border:1px solid #ccc; display:none; margin-top:.25rem; }
+    .sug div { padding:.4rem .5rem; cursor:pointer; }
+    .sug div:hover { background:#f2f2f2; }
+    #title_msg { margin-top:.4rem; font-size:.95rem; }
+    #title_msg.ok { color: green; }
+    #title_msg.error { color: #a00; }
+
   </style>
 </head>
 <body>
   <h1>Recherche</h1>
 
   <!-- TITRES -->
-  <div class="wrap">
-    <input id="title_q" type="text" placeholder="Tape un titre…" autocomplete="off" />
+  <div class="wrap" id="title_block">
+    <div class="row">
+      <input id="title_q" type="text" placeholder="Tape un titre…" autocomplete="off" />
+      <button id="browse_btn" type="button">Browse</button>
+    </div>
     <div id="title_sug" class="sug"></div>
+    <div id="title_msg"></div>
   </div>
 
   <!-- AUTEURS -->
-  <div class="wrap">
+  <div class="wrap" id="auth_block">
     <input id="auth_q" type="text" placeholder="Tape un auteur…" autocomplete="off" />
     <div id="auth_sug" class="sug"></div>
   </div>
 
   <script>
-    // Fonction générique : branche l'autocomplete sur un input + une box de suggestions
+    // --- Autocomplete générique (réutilisable) ---
     function setupAutocomplete({inputId, sugId, url, renderItem}) {
       const input = document.getElementById(inputId);
       const box   = document.getElementById(sugId);
@@ -49,17 +59,13 @@
         }
       });
 
-      // clic : remplir l'input et fermer
       box.addEventListener('click', (e) => {
         const div = e.target.closest('div');
         if (!div) return;
         input.value = div.textContent;
         box.style.display='none'; box.innerHTML='';
-        // ex: ouvrir la page Gutenberg si présente :
-        // const href = div.dataset.url; if (href) window.open(href, '_blank');
       });
 
-      // fermer si clic ailleurs
       document.addEventListener('click', (e) => {
         if (e.target !== input && !box.contains(e.target)) {
           box.style.display='none'; box.innerHTML='';
@@ -67,7 +73,7 @@
       });
     }
 
-    // Active l'autocomplete pour les TITRES (backend lit request.args["title_q"])
+    // TITRES
     setupAutocomplete({
       inputId: 'title_q',
       sugId:   'title_sug',
@@ -75,12 +81,39 @@
       renderItem: x => `<div data-url="${x.url || ''}"><strong>${x.title}</strong>${x.author ? ' — ' + x.author : ''}</div>`
     });
 
-    // Active l'autocomplete pour les AUTEURS (backend lit request.args["auth_q"])
+    // AUTEURS
     setupAutocomplete({
       inputId: 'auth_q',
       sugId:   'auth_sug',
       url:     '/suggest?auth_q=',
       renderItem: x => `<div data-url="${x.url || ''}"><strong>${x.author || x.title || ''}</strong></div>`
+    });
+
+    // --- Bouton Browse ---
+    const browseBtn  = document.getElementById('browse_btn');
+    const titleInput = document.getElementById('title_q');
+    const titleMsg   = document.getElementById('title_msg');
+
+    browseBtn.addEventListener('click', async () => {
+      const q = titleInput.value.trim();
+      titleMsg.textContent = '';
+      titleMsg.className = ""; 
+      if (!q) { titleMsg.textContent = "Veuillez saisir un titre."; return; }
+
+      try {
+        const r = await fetch('/resolve_title?title_q=' + encodeURIComponent(q));
+        const data = await r.json();
+        titleMsg.textContent = data.message;
+        if (data.ok && data.url) {
+          window.open(data.url, '_blank', 'noopener');
+          titleMsg.classList.add("ok");
+        }
+        else {
+          titleMsg.classList.add("error");
+        }
+      } catch {
+        titleMsg.textContent = "Erreur réseau. Réessayez.";
+      }
     });
   </script>
 </body>

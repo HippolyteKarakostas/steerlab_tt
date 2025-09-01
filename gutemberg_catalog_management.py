@@ -100,6 +100,7 @@ def normalize_author(author: str) -> str:
 
 
 def get_and_preprocess_catalog() -> pd.DataFrame:
+    download_catalog()
     df = pd.read_csv("data/pg_catalog.csv").fillna("")
     df["title_norm"] = df["Title"].apply(lambda s: normalize_title(s))
     df["auths_norm"] = df["Authors"].apply(lambda s: normalize_authors(s))

@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 import logging
 
 from gutemberg_catalog_management import get_and_preprocess_catalog, normalize_title
@@ -26,6 +26,7 @@ title_idfs = {trigram: idf_score(title_norm_all, title_3grams.get(trigram, set()
 auth_idfs = {trigram: idf_score(auth_norm_all, auth_3grams.get(trigram, set())) for trigram in auth_3grams}
 title_weights = get_all_sequences_weights(title_idfs, title_index_matching, title_trigram_index_matching)
 auth_weights = get_all_sequences_weights(auth_idfs, auth_index_matching, auth_trigram_index_matching)
+real_title_id_matching = df.set_index("Title")["Text#"].to_dict()
 
 
 @app.route("/")
@@ -55,6 +56,16 @@ def suggest():
             auth_q, auth_3grams, auth_idfs, auth_weights, auth_index_matching, real_norm_auth_matching, is_title=False
         )
     return choices
+
+
+@app.get("/resolve_title")
+def resolve_title():
+    title = request.args.get("title_q", "")
+    title_id = real_title_id_matching.get(title, "")
+    if title_id:
+        url = f"https://www.gutenberg.org/ebooks/{title_id}"
+        return jsonify(ok=True, url=url, message="Bonne lecture !")
+    return jsonify(ok=False, message="Aucun livre du projet Gutenberg ne porte ce titre. Vérifiez l'orthographe."), 404
 
 
 if __name__ == "__main__":

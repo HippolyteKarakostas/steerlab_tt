@@ -7,3 +7,5 @@ pyproject.toml
 data/*
 # mais ne pas ignorer le dossier lui-même
 !data/.gitkeep
+steerlab_tt.ipynb
+.ipynb*
