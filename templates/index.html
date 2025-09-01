@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Démo autocomplete</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; }
+    .wrap { position: relative; margin-bottom: 1rem; }
+    .wrap input { width: 100%; padding: .5rem; font-size: 1rem; }
+    .sug { border: 1px solid #ccc; display: none; margin-top: .25rem; }
+    .sug div { padding: .4rem .5rem; cursor: pointer; }
+    .sug div:hover { background: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h1>Recherche</h1>
+
+  <!-- TITRES -->
+  <div class="wrap">
+    <input id="title_q" type="text" placeholder="Tape un titre…" autocomplete="off" />
+    <div id="title_sug" class="sug"></div>
+  </div>
+
+  <!-- AUTEURS -->
+  <div class="wrap">
+    <input id="auth_q" type="text" placeholder="Tape un auteur…" autocomplete="off" />
+    <div id="auth_sug" class="sug"></div>
+  </div>
+
+  <script>
+    // Fonction générique : branche l'autocomplete sur un input + une box de suggestions
+    function setupAutocomplete({inputId, sugId, url, renderItem}) {
+      const input = document.getElementById(inputId);
+      const box   = document.getElementById(sugId);
+
+      input.addEventListener('input', async () => {
+        const q = input.value.trim();
+        if (!q) { box.style.display='none'; box.innerHTML=''; return; }
+
+        try {
+          const r = await fetch(url + encodeURIComponent(q));
+          const items = await r.json();
+          if (!items.length) { box.style.display='none'; box.innerHTML=''; return; }
+
+          box.innerHTML = items.map(renderItem).join('');
+          box.style.display = 'block';
+        } catch {
+          box.style.display='none'; box.innerHTML='';
+        }
+      });
+
+      // clic : remplir l'input et fermer
+      box.addEventListener('click', (e) => {
+        const div = e.target.closest('div');
+        if (!div) return;
+        input.value = div.textContent;
+        box.style.display='none'; box.innerHTML='';
+        // ex: ouvrir la page Gutenberg si présente :
+        // const href = div.dataset.url; if (href) window.open(href, '_blank');
+      });
+
+      // fermer si clic ailleurs
+      document.addEventListener('click', (e) => {
+        if (e.target !== input && !box.contains(e.target)) {
+          box.style.display='none'; box.innerHTML='';
+        }
+      });
+    }
+
+    // Active l'autocomplete pour les TITRES (backend lit request.args["title_q"])
+    setupAutocomplete({
+      inputId: 'title_q',
+      sugId:   'title_sug',
+      url:     '/suggest?title_q=',
+      renderItem: x => `<div data-url="${x.url || ''}"><strong>${x.title}</strong>${x.author ? ' — ' + x.author : ''}</div>`
+    });
+
+    // Active l'autocomplete pour les AUTEURS (backend lit request.args["auth_q"])
+    setupAutocomplete({
+      inputId: 'auth_q',
+      sugId:   'auth_sug',
+      url:     '/suggest?auth_q=',
+      renderItem: x => `<div data-url="${x.url || ''}"><strong>${x.author || x.title || ''}</strong></div>`
+    });
+  </script>
+</body>
+</html>
