@@ -104,8 +104,8 @@
         const r = await fetch('/resolve_title?title_q=' + encodeURIComponent(q));
         const data = await r.json();
         titleMsg.textContent = data.message;
-        if (data.ok && data.url) {
-          window.open(data.url, '_blank', 'noopener');
+        window.open(data.url, '_blank', 'noopener');
+        if (data.ok) {
           titleMsg.classList.add("ok");
         }
         else {

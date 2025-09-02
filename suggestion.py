@@ -43,7 +43,12 @@ def get_most_relevant_choices(
     is_title=True,
 ) -> str:
     trigrams_request = get_all_3grams_from_string(request)
-    posible_choices = get_all_posible_choices(trigrams_request, sequences_by_trigram)
+    posible_choices = get_all_posible_choices(trigrams_request, sequences_by_trigram) | set.intersection(
+        *(
+            get_all_posible_choices(get_all_3grams_from_string(subrequest), sequences_by_trigram)
+            for subrequest in request.split(" ")
+        )
+    )
     w_q = np.array([idfs[trigram] if trigram in trigrams_request else 0 for trigram in idfs])
     choices_and_scores = [("", 0) for rank in range(5)]
     for choice in posible_choices:

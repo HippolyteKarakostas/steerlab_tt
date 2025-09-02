@@ -60,12 +60,18 @@ def suggest():
 
 @app.get("/resolve_title")
 def resolve_title():
-    title = request.args.get("title_q", "")
+    title = request.args.get("title_q", "").strip()
     title_id = real_title_id_matching.get(title, "")
     if title_id:
         url = f"https://www.gutenberg.org/ebooks/{title_id}"
         return jsonify(ok=True, url=url, message="Bonne lecture !")
-    return jsonify(ok=False, message="Aucun livre du projet Gutenberg ne porte ce titre. Vérifiez l'orthographe."), 404
+    url = f"https://www.gutenberg.org/ebooks/search/?query={title}"
+    return (
+        jsonify(
+            ok=False, url=url, message="Aucun livre du projet Gutenberg ne porte ce titre. Vérifiez l'orthographe."
+        ),
+        404,
+    )
 
 
 if __name__ == "__main__":
