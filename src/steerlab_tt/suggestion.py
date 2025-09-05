@@ -2,7 +2,7 @@ from scipy.sparse import csr_matrix
 from typing import Iterable
 import numpy as np
 
-from nlp import get_all_3grams_from_string
+from steerlab_tt.nlp import get_all_3grams_from_string
 
 
 def get_all_sequences_weights(
