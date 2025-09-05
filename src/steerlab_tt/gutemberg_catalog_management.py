@@ -3,17 +3,22 @@ import string
 import unicodedata
 import re
 import pandas as pd
+from pathlib import Path
 
 # caractères à garder tels quels
 _KEEP = set("-'")  # utile pour noms composés et titres
 _TRANS_TABLE = str.maketrans({c: " " for c in string.punctuation if c not in _KEEP})
+DATA_DIR = Path(__file__).resolve().parent / "data"
+DATA_DIR.mkdir(exist_ok=True)
 
 
 def download_catalog():
     url = "https://www.gutenberg.org/cache/epub/feeds/pg_catalog.csv"
     r = requests.get(url)
-    with open("data/pg_catalog.csv", "wb") as f:
+    csv_path = DATA_DIR / "pg_catalog.csv"
+    with open(csv_path, "wb") as f:
         f.write(r.content)
+    return csv_path
 
 
 def remove_accents(s: str) -> str:
@@ -100,7 +105,7 @@ def normalize_author(author: str) -> str:
 
 
 def get_and_preprocess_catalog() -> pd.DataFrame:
-    download_catalog()
+    csv_path = download_catalog()
     df = pd.read_csv("data/pg_catalog.csv").fillna("")
     df["Title"] = df["Title"].apply(lambda s: re.sub(r"\n", " ", s))
     df["title_norm"] = df["Title"].apply(lambda s: normalize_title(s))
