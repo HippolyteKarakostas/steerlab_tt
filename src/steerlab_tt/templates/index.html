@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Démo autocomplete</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; }
+    .wrap { display:flex; flex-direction:column; gap:.4rem; margin-bottom: 1rem; }
+    .row  { display:flex; gap:.5rem; }
+    .row input { flex:1; padding:.5rem; font-size:1rem; }
+    button { padding:.5rem .8rem; }
+    .sug  { border:1px solid #ccc; display:none; margin-top:.25rem; }
+    .sug div { padding:.4rem .5rem; cursor:pointer; }
+    .sug div:hover { background:#f2f2f2; }
+    #title_msg { margin-top:.4rem; font-size:.95rem; }
+    #title_msg.ok { color: green; }
+    #title_msg.error { color: #a00; }
+
+  </style>
+</head>
+<body>
+  <h1>Recherche</h1>
+
+  <!-- TITRES -->
+  <div class="wrap" id="title_block">
+    <div class="row">
+      <input id="title_q" type="text" placeholder="Tape un titre…" autocomplete="off" />
+      <button id="browse_btn" type="button">Browse</button>
+    </div>
+    <div id="title_sug" class="sug"></div>
+    <div id="title_msg"></div>
+  </div>
+
+  <!-- AUTEURS -->
+  <div class="wrap" id="auth_block">
+    <input id="auth_q" type="text" placeholder="Tape un auteur…" autocomplete="off" />
+    <div id="auth_sug" class="sug"></div>
+  </div>
+
+  <script>
+    // --- Autocomplete générique (réutilisable) ---
+    function setupAutocomplete({inputId, sugId, url, renderItem}) {
+      const input = document.getElementById(inputId);
+      const box   = document.getElementById(sugId);
+
+      input.addEventListener('input', async () => {
+        const q = input.value.trim();
+        if (!q) { box.style.display='none'; box.innerHTML=''; return; }
+
+        try {
+          const r = await fetch(url + encodeURIComponent(q));
+          const items = await r.json();
+          if (!items.length) { box.style.display='none'; box.innerHTML=''; return; }
+
+          box.innerHTML = items.map(renderItem).join('');
+          box.style.display = 'block';
+        } catch {
+          box.style.display='none'; box.innerHTML='';
+        }
+      });
+
+      box.addEventListener('click', (e) => {
+        const div = e.target.closest('div');
+        if (!div) return;
+        input.value = div.textContent;
+        box.style.display='none'; box.innerHTML='';
+      });
+
+      document.addEventListener('click', (e) => {
+        if (e.target !== input && !box.contains(e.target)) {
+          box.style.display='none'; box.innerHTML='';
+        }
+      });
+    }
+
+    // TITRES
+    setupAutocomplete({
+      inputId: 'title_q',
+      sugId:   'title_sug',
+      url:     '/suggest?title_q=',
+      renderItem: x => `<div data-url="${x.url || ''}"><strong>${x.title}</strong>${x.author ? ' — ' + x.author : ''}</div>`
+    });
+
+    // AUTEURS
+    setupAutocomplete({
+      inputId: 'auth_q',
+      sugId:   'auth_sug',
+      url:     '/suggest?auth_q=',
+      renderItem: x => `<div data-url="${x.url || ''}"><strong>${x.author || x.title || ''}</strong></div>`
+    });
+
+    // --- Bouton Browse ---
+    const browseBtn  = document.getElementById('browse_btn');
+    const titleInput = document.getElementById('title_q');
+    const titleMsg   = document.getElementById('title_msg');
+
+    browseBtn.addEventListener('click', async () => {
+      const q = titleInput.value.trim();
+      titleMsg.textContent = '';
+      titleMsg.className = ""; 
+      if (!q) { titleMsg.textContent = "Veuillez saisir un titre."; return; }
+
+      try {
+        const r = await fetch('/resolve_title?title_q=' + encodeURIComponent(q));
+        const data = await r.json();
+        titleMsg.textContent = data.message;
+        window.open(data.url, '_blank', 'noopener');
+        if (data.ok) {
+          titleMsg.classList.add("ok");
+        }
+        else {
+          titleMsg.classList.add("error");
+        }
+      } catch {
+        titleMsg.textContent = "Erreur réseau. Réessayez.";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,7 +1,6 @@
 .vscode/
 __pycache__/
 .pre-commit-config.yaml
-pyproject.toml
 .flake8
 # ignorer tout ce qu’il y a dans data/
 data/*
