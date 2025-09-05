@@ -73,6 +73,9 @@ def resolve_title():
         404,
     )
 
+def main():
+    app.run("0.0.0.0", 5000, debug=False, threaded=True)
+
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 5000, debug=False, threaded=True)
+    main()
