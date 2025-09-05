@@ -1,9 +1,9 @@
 from flask import Flask, request, render_template, jsonify
 import logging
 
-from gutemberg_catalog_management import get_and_preprocess_catalog, normalize_title
-from nlp import match_all_3grams_from_list, idf_score
-from suggestion import get_all_sequences_weights, get_most_relevant_choices
+from steerlab_tt.gutemberg_catalog_management import get_and_preprocess_catalog, normalize_title
+from steerlab_tt.nlp import match_all_3grams_from_list, idf_score
+from steerlab_tt.suggestion import get_all_sequences_weights, get_most_relevant_choices
 
 
 logger = logging.getLogger(__name__)
