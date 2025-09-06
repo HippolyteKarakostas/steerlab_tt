@@ -6,5 +6,8 @@ __pycache__/
 data/*
 # mais ne pas ignorer le dossier lui-même
 !data/.gitkeep
+src/steerlab_tt/data/*
+!src/steerlab_tt/data/.gitkeep
 steerlab_tt.ipynb
 .ipynb*
+*.egg-info/

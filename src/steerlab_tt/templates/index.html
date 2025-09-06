@@ -7,7 +7,8 @@
     body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; }
     .wrap { display:flex; flex-direction:column; gap:.4rem; margin-bottom: 1rem; }
     .row  { display:flex; gap:.5rem; }
-    .row input { flex:1; padding:.5rem; font-size:1rem; }
+    .row input, .row select { padding:.5rem; font-size:1rem; }
+    .row input { flex:1; }
     button { padding:.5rem .8rem; }
     .sug  { border:1px solid #ccc; display:none; margin-top:.25rem; }
     .sug div { padding:.4rem .5rem; cursor:pointer; }
@@ -15,7 +16,6 @@
     #title_msg { margin-top:.4rem; font-size:.95rem; }
     #title_msg.ok { color: green; }
     #title_msg.error { color: #a00; }
-
   </style>
 </head>
 <body>
@@ -24,7 +24,13 @@
   <!-- TITRES -->
   <div class="wrap" id="title_block">
     <div class="row">
-      <input id="title_q" type="text" placeholder="Tape un titre…" autocomplete="off" />
+      <!-- Menu mode à gauche -->
+      <select id="title_mode" aria-label="Mode de recherche pour les titres">
+        <option value="title" selected>Titre</option>
+        <option value="regexp">RegExp</option>
+      </select>
+
+      <input id="title_query" type="text" placeholder="Tape un titre…" autocomplete="off" />
       <button id="browse_btn" type="button">Browse</button>
     </div>
     <div id="title_sug" class="sug"></div>
@@ -33,13 +39,14 @@
 
   <!-- AUTEURS -->
   <div class="wrap" id="auth_block">
-    <input id="auth_q" type="text" placeholder="Tape un auteur…" autocomplete="off" />
+    <input id="auth_query" type="text" placeholder="Tape un auteur…" autocomplete="off" />
     <div id="auth_sug" class="sug"></div>
   </div>
 
   <script>
     // --- Autocomplete générique (réutilisable) ---
-    function setupAutocomplete({inputId, sugId, url, renderItem}) {
+    // Ajout: "getUrl" peut être une fonction (q) => string pour calculer l’URL dynamiquement.
+    function setupAutocomplete({inputId, sugId, url, getUrl, renderItem}) {
       const input = document.getElementById(inputId);
       const box   = document.getElementById(sugId);
 
@@ -47,8 +54,10 @@
         const q = input.value.trim();
         if (!q) { box.style.display='none'; box.innerHTML=''; return; }
 
+        const endpoint = typeof getUrl === 'function' ? getUrl(q) : (url + encodeURIComponent(q));
+
         try {
-          const r = await fetch(url + encodeURIComponent(q));
+          const r = await fetch(endpoint);
           const items = await r.json();
           if (!items.length) { box.style.display='none'; box.innerHTML=''; return; }
 
@@ -73,35 +82,36 @@
       });
     }
 
-    // TITRES
+    // TITRES (avec paramètre mode dans /suggest)
+    const titleMode = document.getElementById('title_mode');
     setupAutocomplete({
-      inputId: 'title_q',
+      inputId: 'title_query',
       sugId:   'title_sug',
-      url:     '/suggest?title_q=',
+      getUrl:  (q) => `/suggest?title_query=${encodeURIComponent(q)}&mode=${encodeURIComponent(titleMode.value)}`,
       renderItem: x => `<div data-url="${x.url || ''}"><strong>${x.title}</strong>${x.author ? ' — ' + x.author : ''}</div>`
     });
 
-    // AUTEURS
+    // AUTEURS (inchangé)
     setupAutocomplete({
-      inputId: 'auth_q',
+      inputId: 'auth_query',
       sugId:   'auth_sug',
-      url:     '/suggest?auth_q=',
+      url:     '/suggest?auth_query=',
       renderItem: x => `<div data-url="${x.url || ''}"><strong>${x.author || x.title || ''}</strong></div>`
     });
 
     // --- Bouton Browse ---
     const browseBtn  = document.getElementById('browse_btn');
-    const titleInput = document.getElementById('title_q');
+    const titleInput = document.getElementById('title_query');
     const titleMsg   = document.getElementById('title_msg');
 
     browseBtn.addEventListener('click', async () => {
       const q = titleInput.value.trim();
       titleMsg.textContent = '';
-      titleMsg.className = ""; 
+      titleMsg.className = "";
       if (!q) { titleMsg.textContent = "Veuillez saisir un titre."; return; }
 
       try {
-        const r = await fetch('/resolve_title?title_q=' + encodeURIComponent(q));
+        const r = await fetch('/resolve_title?title_query=' + encodeURIComponent(q));
         const data = await r.json();
         titleMsg.textContent = data.message;
         window.open(data.url, '_blank', 'noopener');
