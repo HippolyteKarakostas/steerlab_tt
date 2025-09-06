@@ -17,7 +17,7 @@ conda activate steerlab_tt
 git clone https://github.com/HippolyteKarakostas/steerlab_tt.git
 cd steerlab_tt
 ```
-* Installer modules python, dépendances, puis installer le module steerlab_tt (en éditable):
+* Installez les modules python, dépendances, puis installez le module steerlab_tt (en éditable):
 ```
 pip install -r requirements.txt
 pip install -e .
@@ -36,11 +36,11 @@ Ensuite, cliquez sur [ce lien](http://localhost:5000).
 ### Avec un titre
 Vous arrivez alors sur la page suivante:
 ![alt text](docs/images/image.png)
-Vous pouvez rehcerchez un titre de livre en tapant dans la première barre de recherche.
+Vous pouvez rehcercher un titre de livre en tapant dans la première barre de recherche.
 L'image suivante montre ce qui se passe en commençant à chercher "napoléon":
 ![alt text](docs/images/image-1.png)
-L'application commence immédiatement (après au moins 3 caractères écrits) des suggestions de titres de livre.
-Si aucune suggestion de correspond à votre recherche, vous pouvez continuer à taper:
+L'application commence immédiatement (après au moins 3 caractères écrits) à suggérer des titres de livre.
+Si aucune suggestion ne correspond à votre recherche, vous pouvez continuer à taper:
 ![alt text](docs/images/image-2.png)
 Si vous voyez le titre du livre que vous recherchez dans la liste, vous pouvez cliquer dessus
 ![alt text](docs/images/image-3.png)
