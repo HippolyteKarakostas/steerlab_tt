@@ -36,7 +36,7 @@ Ensuite, cliquez sur [ce lien](http://localhost:5000).
 ### Avec un titre
 Vous arrivez alors sur la page suivante:
 ![alt text](docs/images/image.png)
-Vous pouvez rehcercher un titre de livre en tapant dans la première barre de recherche.
+Vous pouvez rechercher un titre de livre en tapant dans la première barre de recherche.
 L'image suivante montre ce qui se passe en commençant à chercher "napoléon":
 ![alt text](docs/images/image-1.png)
 L'application commence immédiatement (après au moins 3 caractères écrits) à suggérer des titres de livre.
